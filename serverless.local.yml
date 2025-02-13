@@ -1,0 +1,61 @@
+service: myapp-serverless
+frameworkVersion: "3"
+
+useDotenv: true
+
+configValidationMode: error
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-typescript
+  - serverless-dotenv-plugin
+  - serverless-prune-plugin
+
+provider:
+  name: aws
+  versionFunctions: false
+  runtime: nodejs20.x
+  stage: ${opt:stage}
+  region: ${env:AWS_LAMBDA_REGION}
+  environment:
+    STAGE: ${env:APP_ENV}
+  iam:
+    role: ${env:AWS_LAMBDA_IAM_ROLE}
+
+custom:
+  serverless-offline:
+    httpPort: 8000
+    websocketPort: 8001
+    lambdaPort: 8002
+  stage: ${opt:stage}
+  cors:
+    origin: ${env:ORIGIN}
+    methods:
+      - "OPTIONS"
+      - "GET"
+      - "POST"
+      - "PATCH"
+    headers:
+      - Content-Type
+      - X-Amz-Date
+      - Authorization
+      - X-Api-Key
+      - X-Amz-Security-Token
+      - X-Amz-User-Agent
+      - cognito-token
+      - service
+      - canceltoken
+      - id-token
+      - x-user-type
+      - x-user-account-id
+  requestAuthorizer:
+    type: request
+    name: custom-authorizer
+    identitySource: method.request.header.cognito-token
+    resultTtlInSeconds: 0
+
+package:
+  excludeDevDependencies: true
+
+functions:
+  - ${file(./src/functions/auth/auth.serverless.local.yml)}

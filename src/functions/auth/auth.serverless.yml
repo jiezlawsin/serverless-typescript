@@ -1,0 +1,19 @@
+custom-authorizer:
+  image:
+    name: myapp-serverless
+    command:
+      - functions/auth/authorizer.handler
+  timeout: 60
+  memorySize: 4096
+auth-login:
+  image:
+    name: myapp-serverless
+    command:
+      - functions/auth/login.handler
+  timeout: 30
+  events:
+    - http:
+        method: post
+        path: /signin
+        private: false
+        cors: ${self:custom.cors}

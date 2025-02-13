@@ -1,0 +1,7 @@
+export const PaymentStatus = {
+  SUCCESS: 'SUCCESS',
+  FAILED: 'FAILED',
+  PENDING: 'PENDING',
+  CANCELLED: 'CANCELLED',
+  REFUNDED: 'REFUNDED'
+}

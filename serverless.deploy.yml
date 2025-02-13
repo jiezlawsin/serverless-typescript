@@ -1,0 +1,86 @@
+service: myapp-serverless
+frameworkVersion: "3"
+
+useDotenv: true
+
+configValidationMode: error
+
+plugins:
+  - serverless-offline
+  # - serverless-plugin-typescript
+  - serverless-dotenv-plugin
+  # - serverless-prune-plugin
+
+provider:
+  name: aws
+  versionFunctions: false
+  stage: ${opt:stage}
+  region: ${env:AWS_LAMBDA_REGION}
+  environment:
+    STAGE: ${env:APP_ENV}
+  iam:
+    role: ${env:AWS_LAMBDA_IAM_ROLE}
+  ecr:
+    images:
+      myapp-serverless:
+        path: ./
+        file: Dockerfile
+  # SET YOUR VPC IF APPLICABLE
+  vpc:
+    securityGroupIds:
+      - ${env:AWS_LAMBDA_SECURITY_GROUP} # Replace with your Security Group ID
+    subnetIds:
+      - ${env:AWS_VPC_SUBNET_1} # Replace with your Subnet ID
+      - ${env:AWS_VPC_SUBNET_2} # Replace with another Subnet ID (if using multiple)
+      - ${env:AWS_VPC_SUBNET_3} # Replace with another Subnet ID (if using multiple)
+
+custom:
+  serverless-offline:
+    httpPort: 8000
+    websocketPort: 8001
+    lambdaPort: 8002
+  stage: ${opt:stage}
+  cors:
+    origin: ${env:ORIGIN}
+    methods:
+      - "OPTIONS"
+      - "GET"
+      - "POST"
+      - "PATCH"
+    headers:
+      - Content-Type
+      - X-Amz-Date
+      - Authorization
+      - X-Api-Key
+      - X-Amz-Security-Token
+      - X-Amz-User-Agent
+      - cognito-token
+      - service
+      - canceltoken
+      - id-token
+      - x-user-type
+      - x-user-account-id
+  requestAuthorizer:
+    type: request
+    name: custom-authorizer
+    identitySource: method.request.header.cognito-token
+    resultTtlInSeconds: 0
+
+package:
+  excludeDevDependencies: true
+
+functions:
+  - ${file(./src/functions/auth/auth.serverless.yml)}
+# SAMPLE TO ADJUST STORAGE OF LAMBDA
+# resources:
+#   Resources:
+#     GenerateCTCLambdaFunction:
+#       Type: AWS::Lambda::Function
+#       Properties:
+#         FunctionName: serverless-${env:APP_ENV}-generateCTC
+#         MemorySize: 4096 # Set specific memory
+#         Timeout: 300 # Set specific timeout
+#         EphemeralStorage:
+#           Size: 5120 # Set ephemeral storage for this function
+#         PackageType: Image # Since you're using container image
+#         # Other function properties, such as handler, image, etc.

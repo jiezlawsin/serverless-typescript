@@ -1,0 +1,13 @@
+custom-authorizer:
+  handler: ./src/functions/auth/authorizer.handler
+  timeout: 60
+  memorySize: 4096
+auth-login:
+  handler: ./src/functions/auth/login.handler
+  timeout: 30
+  events:
+    - http:
+        method: post
+        path: /signin
+        private: false
+        cors: ${self:custom.cors}
